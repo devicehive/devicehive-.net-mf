@@ -8,9 +8,9 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyTitle("DeviceHiveMF")]
 [assembly: AssemblyDescription("DeviceHive Embedded Device Library")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("DataArt")]
-[assembly: AssemblyProduct("DeviceHiveMF")]
-[assembly: AssemblyCopyright("Copyright DataArt ©  2013")]
+[assembly: AssemblyCompany("DataArt Apps")]
+[assembly: AssemblyProduct("DeviceHive")]
+[assembly: AssemblyCopyright("Copyright © DataArt Apps 2013")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 

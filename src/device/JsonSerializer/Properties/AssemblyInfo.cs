@@ -8,9 +8,9 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyTitle("JsonSerializer")]
 [assembly: AssemblyDescription("JSON serialization library")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("DataArt")]
-[assembly: AssemblyProduct("JsonSerializer")]
-[assembly: AssemblyCopyright("Copyright DataArt ©  2013")]
+[assembly: AssemblyCompany("DataArt Apps")]
+[assembly: AssemblyProduct("DeviceHive")]
+[assembly: AssemblyCopyright("Copyright © DataArt Apps 2013")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
