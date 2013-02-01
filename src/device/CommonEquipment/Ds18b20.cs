@@ -1,5 +1,7 @@
 using System;
-using GHIElectronics.NETMF.Hardware;
+using Microsoft.SPOT;
+using Microsoft.SPOT.Hardware;
+using GHI.Premium.Hardware;
 
 
 namespace DeviceHive.CommonEquipment
@@ -25,15 +27,21 @@ namespace DeviceHive.CommonEquipment
         /// <param name="number">sequence number of a bus element</param>
         public Ds18b20(OneWire bus, int number)
         {
+            if (bus.AcquireEx() < 0)
+            {
+                throw new IndexOutOfRangeException("Invalid OneWire bus.");
+            }
             OneWireBus = bus;
             Address = new byte[8];
-            int n = 0;
-            bus.Search_Restart();
-            while (bus.Search_GetNextDevice(Address) && n <= number)
+            for (int n = bus.FindFirstDevice(true, false); n != 0; n = bus.FindNextDevice(true, false))
             {
-                n++; 
+                if (n == number + 1)
+                {
+                    bus.SerialNum(Address, true);
+                    return;
+                }
             }
-            if (n != number + 1) throw new IndexOutOfRangeException("Invalid device number.");
+            throw new IndexOutOfRangeException("Invalid device number.");
         }
 
         /// <summary>
@@ -43,12 +51,21 @@ namespace DeviceHive.CommonEquipment
         /// <param name="address">device address</param>
         public Ds18b20(OneWire bus, byte [] address)
         {
-            OneWireBus = bus;
-            Address = (byte[]) address.Clone();
-            if (!bus.Search_IsDevicePresent(Address))
+            if (bus.AcquireEx() < 0)
             {
-                throw new InvalidOperationException("Device with the specified address is not present in the bus.");
+                throw new IndexOutOfRangeException("Invalid OneWire bus.");
             }
+            OneWireBus = bus;
+            Address = new byte[8];
+            for (int n = bus.FindFirstDevice(true, false); n != 0; n = bus.FindNextDevice(true, false))
+            {
+                bus.SerialNum(Address, true);
+                if (Address.Compare(address))
+                {
+                    return;
+                }
+            }
+            throw new InvalidOperationException("Device with the specified address is not present in the bus.");
         }
 
         /// <summary>
@@ -57,10 +74,13 @@ namespace DeviceHive.CommonEquipment
         /// <returns>True if successfull; false - otherwise</returns>
         private bool Select()
         {
-            if (OneWireBus.Reset())
+            if (OneWireBus.TouchReset() > 0)
             {
                 OneWireBus.WriteByte(MatchROM);
-                OneWireBus.Write(Address, 0, Address.Length);
+                for (byte i = 0; i < Address.Length; i++)
+                {
+                    OneWireBus.WriteByte(Address[i]);
+                }
                 return true;
             }
             return false;
@@ -78,12 +98,14 @@ namespace DeviceHive.CommonEquipment
                 if (Select())
                 {
                     OneWireBus.WriteByte(StartTemperatureConversion);
-                    
-                    while (OneWireBus.ReadBit() == 0) { }
+
+                    while (OneWireBus.ReadByte() == 0);
+
                     if (Select())
                     {
                         OneWireBus.WriteByte(ReadScratchPad);
-                        ushort ut = OneWireBus.ReadByte();
+
+                        ushort ut = (byte)OneWireBus.ReadByte();
                         ut |= (ushort)(OneWireBus.ReadByte() << 8);
                         rv = ut / 16f;
                     }
