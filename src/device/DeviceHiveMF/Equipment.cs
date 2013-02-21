@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 
 namespace DeviceHive
 {
@@ -34,5 +35,18 @@ namespace DeviceHive
         /// Was introduced in v.6.
         /// </remarks>
         public string type;
+
+        /// <summary>
+        /// Associated equipment data.
+        /// </summary>
+        public Hashtable data;
+
+        public override int GetHashCode()
+        {
+            return ObjectHelpers.GetHashCode(name)
+                ^ ObjectHelpers.GetHashCode(code)
+                ^ ObjectHelpers.GetHashCode(type)
+                ^ ObjectHelpers.GetHashCode(data);
+        }
     }
 }

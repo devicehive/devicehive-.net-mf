@@ -302,7 +302,8 @@ namespace DeviceHive
                     {
                         BeforeCommand(this, new CommandEventArgs(null));
                     }
-                    dc = DcClient.GetCommand(DeviceData);
+                    //dc = DcClient.GetCommand(DeviceData);
+                    dc = DcClient.PollCommand(DeviceData);
                     //System.Threading.Thread.Sleep(100);
                 }
                 if (dc != null)

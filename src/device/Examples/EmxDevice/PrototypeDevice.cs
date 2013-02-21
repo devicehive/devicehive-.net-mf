@@ -24,7 +24,7 @@ namespace EmxDevice
 
         public PrototypeDevice()
         {
-            DcClient = new DeviceHive.HttpClient(Resources.GetString(Resources.StringResources.CloudUrl), DateTime.MinValue, RequestTimeout);
+            DcClient = new DeviceHive.HttpClient(Resources.GetString(Resources.StringResources.CloudUrl), RequestTimeout);
 
             Initializing += new ConnectEventHandler(PreInit);
             Connecting += new ConnectEventHandler(PreConnect);
@@ -186,7 +186,6 @@ namespace EmxDevice
             }
             ni.EnableDynamicDns();
             NetworkInterfaceExtension.AssignNetworkingStackTo(Ethernet);
-            Debug.Print("IP address is: " + ni.IPAddress);
 
             return ni;
         }

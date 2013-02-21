@@ -33,5 +33,12 @@ namespace DeviceHive
         /// It is recommended to use string GUID when creating this data structure.
         /// </remarks>
         public string key; // v6
+
+        public override int GetHashCode()
+        {
+            return ObjectHelpers.GetHashCode(name)
+                ^ ObjectHelpers.GetHashCode(description)
+                ^ ObjectHelpers.GetHashCode(key);
+        }
     }
 }

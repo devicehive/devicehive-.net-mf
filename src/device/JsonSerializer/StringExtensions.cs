@@ -102,7 +102,7 @@ namespace Json.Serialization
         /// </summary>
         /// <param name="s">string to be checked</param>
         /// <returns>True if the string = null of is empty (""); false - otherwise</returns>
-        public static bool IsNullOrEmpty(this string s)
+        public static bool IsNullOrEmpty(string s)
         {
             if (s == null) return true;
             return s == string.Empty;

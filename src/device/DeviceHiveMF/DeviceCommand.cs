@@ -27,7 +27,12 @@ namespace DeviceHive
         /// <remarks>
         /// Caller can specify the timestamp when getting or polling commands.
         /// </remarks>
-        public DateTime timestamp;
+        public string timestamp;
+
+        /// <summary>
+        /// UserId of creator of the command.
+        /// </summary>
+        public int userId;
 
         /// <summary>
         /// Command name
@@ -58,5 +63,18 @@ namespace DeviceHive
         /// Command result
         /// </summary>
         public string result;
+
+        public override int GetHashCode()
+        {
+            return ObjectHelpers.GetHashCode(id)
+                ^ ObjectHelpers.GetHashCode(timestamp)
+                ^ ObjectHelpers.GetHashCode(userId)
+                ^ ObjectHelpers.GetHashCode(command)
+                ^ ObjectHelpers.GetHashCode(parameters)
+                ^ ObjectHelpers.GetHashCode(lifetime)
+                ^ ObjectHelpers.GetHashCode(flags)
+                ^ ObjectHelpers.GetHashCode(status)
+                ^ ObjectHelpers.GetHashCode(result);
+        }
     }
 }

@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 
 namespace DeviceHive
 {
@@ -44,6 +45,11 @@ namespace DeviceHive
         public string status;
 
         /// <summary>
+        /// Associated device data.
+        /// </summary>
+        public Hashtable data;
+
+        /// <summary>
         /// Device network
         /// </summary>
         public DeviceNetwork network;
@@ -57,5 +63,17 @@ namespace DeviceHive
         /// Array of device equipment structures
         /// </summary>
         public Equipment[] equipment;
+
+        public override int GetHashCode()
+        {
+            return ObjectHelpers.GetHashCode(id)
+                ^ ObjectHelpers.GetHashCode(key)
+                ^ ObjectHelpers.GetHashCode(name)
+                ^ ObjectHelpers.GetHashCode(status)
+                ^ ObjectHelpers.GetHashCode(data)
+                ^ ObjectHelpers.GetHashCode(network)
+                ^ ObjectHelpers.GetHashCode(deviceClass)
+                ^ ObjectHelpers.GetHashCode(equipment);
+        }
     }
 }

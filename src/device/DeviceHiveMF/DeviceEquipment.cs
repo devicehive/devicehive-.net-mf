@@ -19,7 +19,7 @@ namespace DeviceHive
         /// <remarks>
         /// Created by server.
         /// </remarks>
-        public DateTime timestamp;
+        public string timestamp;
 
         /// <summary>
         /// Command name
@@ -30,5 +30,12 @@ namespace DeviceHive
         /// Name-value array of parameters
         /// </summary>
         public Hashtable parameters;
+
+        public override int GetHashCode()
+        {
+            return ObjectHelpers.GetHashCode(timestamp)
+                ^ ObjectHelpers.GetHashCode(name)
+                ^ ObjectHelpers.GetHashCode(parameters);
+        }
     }
 }
