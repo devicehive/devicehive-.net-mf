@@ -2,6 +2,7 @@ using System;
 using Microsoft.SPOT;
 using Microsoft.SPOT.Hardware;
 using GHI.Premium.Hardware;
+using System.Collections;
 
 
 namespace DeviceHive.CommonEquipment
@@ -24,24 +25,20 @@ namespace DeviceHive.CommonEquipment
         /// Constructs DS-18B20 object for a given 1-wire bus and a device sequence number. 
         /// </summary>
         /// <param name="bus">1-wire bus to whish the sensor is attached</param>
-        /// <param name="number">sequence number of a bus element</param>
-        public Ds18b20(OneWire bus, int number)
+        /// <param name="index">sequence index of a bus element</param>
+        public Ds18b20(OneWire bus, int index)
         {
             if (bus.AcquireEx() < 0)
             {
-                throw new IndexOutOfRangeException("Invalid OneWire bus.");
+                throw new InvalidOperationException("Invalid OneWire bus.");
             }
             OneWireBus = bus;
-            Address = new byte[8];
-            for (int n = bus.FindFirstDevice(true, false); n != 0; n = bus.FindNextDevice(true, false))
+            ArrayList devices = GetDevices();
+            if (index >= devices.Count)
             {
-                if (n == number + 1)
-                {
-                    bus.SerialNum(Address, true);
-                    return;
-                }
+                throw new IndexOutOfRangeException("Invalid device number.");
             }
-            throw new IndexOutOfRangeException("Invalid device number.");
+            Address = (byte[])devices[index];
         }
 
         /// <summary>
@@ -49,23 +46,39 @@ namespace DeviceHive.CommonEquipment
         /// </summary>
         /// <param name="bus">1-wire bus to whish the sensor is attached</param>
         /// <param name="address">device address</param>
-        public Ds18b20(OneWire bus, byte [] address)
+        public Ds18b20(OneWire bus, byte[] address)
         {
             if (bus.AcquireEx() < 0)
             {
-                throw new IndexOutOfRangeException("Invalid OneWire bus.");
+                throw new InvalidOperationException("Invalid OneWire bus.");
             }
             OneWireBus = bus;
-            Address = new byte[8];
-            for (int n = bus.FindFirstDevice(true, false); n != 0; n = bus.FindNextDevice(true, false))
+            ArrayList devices = GetDevices();
+            foreach (byte[] Address in devices)
             {
-                bus.SerialNum(Address, true);
                 if (Address.Compare(address))
                 {
+                    this.Address = Address;
                     return;
                 }
             }
             throw new InvalidOperationException("Device with the specified address is not present in the bus.");
+        }
+
+        protected ArrayList GetDevices()
+        {
+            ArrayList devices;
+            int attempt = 0;
+            do
+            {
+                devices = OneWireBus.FindAllDevices();
+                // Something wrong with 1-wire in .NET MF 4.2, up to 30 attempts are needed to find devices
+            } while (devices.Count == 0 && attempt++ < 100);
+            if (devices.Count == 0)
+            {
+                throw new IndexOutOfRangeException("No any device on OneWire bus.");
+            }
+            return devices;
         }
 
         /// <summary>
