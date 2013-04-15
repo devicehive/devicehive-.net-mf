@@ -206,7 +206,7 @@ namespace DeviceHive
                 PutMethod, 
                 device.id.ToString(), 
                 device.key) as HttpWebResponse;
-            return  resp.StatusCode == HttpStatusCode.OK;
+            return resp.StatusCode == HttpStatusCode.OK || resp.StatusCode == HttpStatusCode.NoContent;
         }
 
         /// <summary>
@@ -387,8 +387,8 @@ namespace DeviceHive
                 PutMethod,
                 device.id.ToString(),
                 device.key) as HttpWebResponse;
-            
-            return resp.StatusCode == HttpStatusCode.OK;
+
+            return resp.StatusCode == HttpStatusCode.OK || resp.StatusCode == HttpStatusCode.NoContent;
         }
     }
 }
