@@ -3,12 +3,12 @@
   <PropertyGroup>
     <AssemblyName>HttpClient</AssemblyName>
     <OutputType>Library</OutputType>
-    <RootNamespace>HttpClient</RootNamespace>
+    <RootNamespace>DeviceHive</RootNamespace>
     <ProjectTypeGuids>{b69e3092-b931-443c-abe7-7e7b65f2a37f};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
     <ProductVersion>9.0.21022</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{BCD81EB1-9364-4AF3-9040-D6AD573D5C83}</ProjectGuid>
-    <TargetFrameworkVersion>v4.1</TargetFrameworkVersion>
+    <ProjectGuid>{EC96CBD5-F960-4317-AB78-6EEB1A609033}</ProjectGuid>
+    <TargetFrameworkVersion>v4.2</TargetFrameworkVersion>
     <NetMfTargetsBaseDir Condition="'$(NetMfTargetsBaseDir)'==''">$(MSBuildExtensionsPath32)\Microsoft\.NET Micro Framework\</NetMfTargetsBaseDir>
     <TargetFrameworkProfile />
   </PropertyGroup>
@@ -33,6 +33,7 @@
   <ItemGroup>
     <Compile Include="HttpClient.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="UriExtensions.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="Microsoft.SPOT.Native">
@@ -41,11 +42,11 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\DeviceHiveMF\DeviceHiveMF.csproj">
-      <Project>{116D5C58-D29B-41FD-A9BD-095F0FB140DC}</Project>
+      <Project>{C7E48992-0C0B-4F8A-8365-8DF0C0E19A2F}</Project>
       <Name>DeviceHiveMF</Name>
     </ProjectReference>
     <ProjectReference Include="..\JsonSerializer\JsonSerializer.csproj">
-      <Project>{38C3BA73-6B11-40C3-BEAC-5291576FFB8C}</Project>
+      <Project>{6155DDAB-F8A2-473D-8211-7695A3D61050}</Project>
       <Name>JsonSerializer</Name>
     </ProjectReference>
   </ItemGroup>

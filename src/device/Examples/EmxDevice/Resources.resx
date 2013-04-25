@@ -117,6 +117,10 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="CloudUrl" xml:space="preserve">
+    <value>http://localhost/ecapi8</value>
+    <comment>Replace the localhost with an actual address of your DeviceHive server</comment>
+  </data>
   <data name="DeviceClass" xml:space="preserve">
     <value>Prototype</value>
   </data>
@@ -128,22 +132,18 @@
   </data>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="guid" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>Resources\guid.bin;System.Byte[], mscorlib, Version=4.1.2821.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>Resources\guid.bin;System.Byte[], mscorlib, Version=4.2.0.0, Culture=neutral, PublicKeyToken=null</value>
+  </data>
+  <data name="Key" xml:space="preserve">
+    <value>{C7E52BA2-F65C-4418-9BDE-91FDF54F1914}</value>
   </data>
   <data name="Network" xml:space="preserve">
     <value>.NET MF Net</value>
   </data>
-  <data name="Version" xml:space="preserve">
-    <value>1.002</value>
-  </data>
-  <data name="CloudUrl" xml:space="preserve">
-    <value>http://localhost/ecapi6</value>
-    <comment>Replace the localhost with an actual address of your DeviceHive server</comment>
-  </data>
   <data name="NetworkDesc" xml:space="preserve">
     <value>Test network of .NET Micro Framework devices</value>
   </data>
-  <data name="Key" xml:space="preserve">
-    <value>{C7E52BA2-F65C-4418-9BDE-91FDF54F1914}</value>
+  <data name="Version" xml:space="preserve">
+    <value>1.002</value>
   </data>
 </root>

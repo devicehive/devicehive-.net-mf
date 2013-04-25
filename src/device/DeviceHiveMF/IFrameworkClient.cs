@@ -11,6 +11,12 @@ namespace DeviceHive
     public interface IFrameworkClient
     {
         /// <summary>
+        /// Gets API info.
+        /// </summary>
+        /// <returns><see cref="ApiInfo"/> object.</returns>
+        ApiInfo GetApiInfo();
+
+        /// <summary>
         /// Registers a device
         /// </summary>
         /// <param name="device">Device data structure</param>
@@ -35,21 +41,23 @@ namespace DeviceHive
         /// Gets a command
         /// </summary>
         /// <param name="device">Device data of the device that is getting a command</param>
+        /// <param name="onlyUnprocessed">Get commands with empty status only</param>
         /// <returns>Command data structure or null if there are no pending commands</returns>
         /// <remarks>
         /// This method returns all the commands that are waiting at the server since last GetCommand call. It returns immediately, regardless if there are commands to execute or not.
         /// </remarks>
-        DeviceCommand GetCommand(Device device);
+        DeviceCommand GetCommand(Device device, bool onlyUnprocessed = true);
 
         /// <summary>
         /// Polls command for execution
         /// </summary>
         /// <param name="device">Device data of the device that is polling a command</param>
+        /// <param name="onlyUnprocessed">Get commands with empty status only</param>
         /// <returns>Command data structure or null if there are no commands</returns>
         /// <remarks>
         /// This method returns the next command from the command queue. If there are no commands in the queue, it waits for ~30 seconds to receive a new command.
         /// </remarks>
-        DeviceCommand PollCommand(Device device);
+        DeviceCommand PollCommand(Device device, bool onlyUnprocessed = true);
 
         /// <summary>
         /// Updates command status

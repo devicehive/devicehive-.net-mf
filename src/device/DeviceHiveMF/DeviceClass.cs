@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 
 namespace DeviceHive
 {
@@ -29,5 +30,18 @@ namespace DeviceHive
         /// Amount of inactivity time, in milliseconds, after which the server would consider that the device offline.
         /// </summary>
         public int offlineTimeout;
+
+        /// <summary>
+        /// Associated device class data.
+        /// </summary>
+        public Hashtable data;
+
+        public override int GetHashCode()
+        {
+            return ObjectHelpers.GetHashCode(name) 
+                ^ ObjectHelpers.GetHashCode(version) 
+                ^ ObjectHelpers.GetHashCode(offlineTimeout) 
+                ^ ObjectHelpers.GetHashCode(data);
+        }
     }
 }

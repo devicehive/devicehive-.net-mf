@@ -31,5 +31,12 @@ namespace DeviceHive
         /// </summary>
         public Hashtable parameters;
 
+        public override int GetHashCode()
+        {
+            return ObjectHelpers.GetHashCode(timestamp)
+                ^ ObjectHelpers.GetHashCode(notification)
+                ^ ObjectHelpers.GetHashCode(parameters);
+        }
+
     }
 }

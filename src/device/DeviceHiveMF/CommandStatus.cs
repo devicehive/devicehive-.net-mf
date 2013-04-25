@@ -1,5 +1,6 @@
 using System;
 using Microsoft.SPOT;
+using System.Collections;
 
 namespace DeviceHive
 {   
@@ -32,5 +33,11 @@ namespace DeviceHive
         /// Command result string. It is a free text message.
         /// </summary>
         public string result;
+
+        public override int GetHashCode()
+        {
+            return ObjectHelpers.GetHashCode(status)
+                ^ ObjectHelpers.GetHashCode(result);
+        }
     }
 }

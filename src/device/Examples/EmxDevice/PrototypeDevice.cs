@@ -1,10 +1,11 @@
-using System;
-using Microsoft.SPOT;
 using DeviceHive;
-using GHIElectronics.NETMF.Net;
-using Microsoft.SPOT.Net.NetworkInformation;
-using GHIElectronics.NETMF.Hardware;
 using DeviceHive.CommonEquipment;
+using GHI.Premium.Hardware;
+using GHI.Premium.Net;
+using Microsoft.SPOT;
+using Microsoft.SPOT.Hardware;
+using Microsoft.SPOT.Net.NetworkInformation;
+using System;
 
 namespace EmxDevice
 {
@@ -13,7 +14,8 @@ namespace EmxDevice
     {
         private const string NetMask = "255.255.255.0";
 
-        private OutputCompare BlinkingLed;
+        private SignalGenerator BlinkingLed;
+        private EthernetBuiltIn Ethernet;
         private OneWire OneWireBus;
         private const int RequestTimeout = 120000;
         private const int WatchDogTimeout = 300000;
@@ -22,7 +24,7 @@ namespace EmxDevice
 
         public PrototypeDevice()
         {
-            DcClient = new DeviceHive.HttpClient(Resources.GetString(Resources.StringResources.CloudUrl), DateTime.MinValue, RequestTimeout);
+            DcClient = new DeviceHive.HttpClient(Resources.GetString(Resources.StringResources.CloudUrl), RequestTimeout);
 
             Initializing += new ConnectEventHandler(PreInit);
             Connecting += new ConnectEventHandler(PreConnect);
@@ -37,9 +39,9 @@ namespace EmxDevice
 
         private bool PreInit(object sender, EventArgs e)
         {
-            BlinkingLed = new OutputCompare(EMX.Pin.IO17, false, 2);
+            BlinkingLed = new SignalGenerator(EMX.Pin.IO17, false, 2);
             Blink(100);
-            OneWireBus = new OneWire(EMX.Pin.IO13);
+            OneWireBus = new OneWire(new OutputPort(EMX.Pin.IO26, false));
             return true;
         }
 
@@ -104,7 +106,7 @@ namespace EmxDevice
         {
             BlinkingLed.Set(true);
 
-            GHIElectronics.NETMF.Hardware.LowLevel.Watchdog.Enable(WatchDogTimeout);
+            GHI.Premium.Hardware.LowLevel.Watchdog.Enable(WatchDogTimeout);
             return true;
         }
 
@@ -131,7 +133,7 @@ namespace EmxDevice
 
         private void PostProcessCommand(object sender, CommandEventArgs e)
         {
-            GHIElectronics.NETMF.Hardware.LowLevel.Watchdog.ResetCounter();
+            GHI.Premium.Hardware.LowLevel.Watchdog.ResetCounter();
             BlinkingLed.Set(true);
         }
 
@@ -142,7 +144,7 @@ namespace EmxDevice
 
         private void PostProcessNotification(object sender, NotificationEventArgs e)
         {
-            GHIElectronics.NETMF.Hardware.LowLevel.Watchdog.ResetCounter();
+            GHI.Premium.Hardware.LowLevel.Watchdog.ResetCounter();
             BlinkingLed.Set(true);
         }
 
@@ -153,15 +155,15 @@ namespace EmxDevice
 
         private NetworkInterface StartClient(string StaticIP)
         {
-            NetworkInterface ni;
+            Ethernet = new EthernetBuiltIn();
+            Ethernet.Open();
 
             if (!Ethernet.IsCableConnected)
             {
                 Debug.Print("Network cable is not connected!");
             }
-            Ethernet.Enable();
 
-            ni = NetworkInterface.GetAllNetworkInterfaces()[0];
+            NetworkInterface ni = Ethernet.NetworkInterface;
 
             if (StaticIP == string.Empty)
             {
@@ -182,7 +184,8 @@ namespace EmxDevice
                 ni.EnableStaticIP(StaticIP, NetMask, string.Empty);
                 Debug.Print("Static IP enabled.");
             }
-            Debug.Print("IP address is: " + ni.IPAddress);
+            ni.EnableDynamicDns();
+            NetworkInterfaceExtension.AssignNetworkingStackTo(Ethernet);
 
             return ni;
         }

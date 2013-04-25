@@ -1,5 +1,8 @@
 using System;
-using GHIElectronics.NETMF.Hardware;
+using Microsoft.SPOT;
+using Microsoft.SPOT.Hardware;
+using GHI.Premium.Hardware;
+using System.Collections;
 
 
 namespace DeviceHive.CommonEquipment
@@ -22,18 +25,20 @@ namespace DeviceHive.CommonEquipment
         /// Constructs DS-18B20 object for a given 1-wire bus and a device sequence number. 
         /// </summary>
         /// <param name="bus">1-wire bus to whish the sensor is attached</param>
-        /// <param name="number">sequence number of a bus element</param>
-        public Ds18b20(OneWire bus, int number)
+        /// <param name="index">sequence index of a bus element</param>
+        public Ds18b20(OneWire bus, int index)
         {
-            OneWireBus = bus;
-            Address = new byte[8];
-            int n = 0;
-            bus.Search_Restart();
-            while (bus.Search_GetNextDevice(Address) && n <= number)
+            if (bus.AcquireEx() < 0)
             {
-                n++; 
+                throw new InvalidOperationException("Invalid OneWire bus.");
             }
-            if (n != number + 1) throw new IndexOutOfRangeException("Invalid device number.");
+            OneWireBus = bus;
+            ArrayList devices = GetDevices();
+            if (index >= devices.Count)
+            {
+                throw new IndexOutOfRangeException("Invalid device number.");
+            }
+            Address = (byte[])devices[index];
         }
 
         /// <summary>
@@ -41,14 +46,39 @@ namespace DeviceHive.CommonEquipment
         /// </summary>
         /// <param name="bus">1-wire bus to whish the sensor is attached</param>
         /// <param name="address">device address</param>
-        public Ds18b20(OneWire bus, byte [] address)
+        public Ds18b20(OneWire bus, byte[] address)
         {
-            OneWireBus = bus;
-            Address = (byte[]) address.Clone();
-            if (!bus.Search_IsDevicePresent(Address))
+            if (bus.AcquireEx() < 0)
             {
-                throw new InvalidOperationException("Device with the specified address is not present in the bus.");
+                throw new InvalidOperationException("Invalid OneWire bus.");
             }
+            OneWireBus = bus;
+            ArrayList devices = GetDevices();
+            foreach (byte[] Address in devices)
+            {
+                if (Address.Compare(address))
+                {
+                    this.Address = Address;
+                    return;
+                }
+            }
+            throw new InvalidOperationException("Device with the specified address is not present in the bus.");
+        }
+
+        protected ArrayList GetDevices()
+        {
+            ArrayList devices;
+            int attempt = 0;
+            do
+            {
+                devices = OneWireBus.FindAllDevices();
+                // Something wrong with 1-wire in .NET MF 4.2, up to 30 attempts are needed to find devices
+            } while (devices.Count == 0 && attempt++ < 100);
+            if (devices.Count == 0)
+            {
+                throw new IndexOutOfRangeException("No any device on OneWire bus.");
+            }
+            return devices;
         }
 
         /// <summary>
@@ -57,10 +87,13 @@ namespace DeviceHive.CommonEquipment
         /// <returns>True if successfull; false - otherwise</returns>
         private bool Select()
         {
-            if (OneWireBus.Reset())
+            if (OneWireBus.TouchReset() > 0)
             {
                 OneWireBus.WriteByte(MatchROM);
-                OneWireBus.Write(Address, 0, Address.Length);
+                for (byte i = 0; i < Address.Length; i++)
+                {
+                    OneWireBus.WriteByte(Address[i]);
+                }
                 return true;
             }
             return false;
@@ -78,12 +111,14 @@ namespace DeviceHive.CommonEquipment
                 if (Select())
                 {
                     OneWireBus.WriteByte(StartTemperatureConversion);
-                    
-                    while (OneWireBus.ReadBit() == 0) { }
+
+                    while (OneWireBus.ReadByte() == 0);
+
                     if (Select())
                     {
                         OneWireBus.WriteByte(ReadScratchPad);
-                        ushort ut = OneWireBus.ReadByte();
+
+                        ushort ut = (byte)OneWireBus.ReadByte();
                         ut |= (ushort)(OneWireBus.ReadByte() << 8);
                         rv = ut / 16f;
                     }
