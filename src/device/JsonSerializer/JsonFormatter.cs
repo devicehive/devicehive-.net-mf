@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections;
+using System.Globalization;
 using System.Reflection;
 using System.Text;
 
@@ -55,79 +56,87 @@ namespace Json.Serialization
                 if (hasStarted) JsonString += ", ";
                 hasStarted = true;
                 JsonString += "\"" + fi.Name + "\": ";
-                
-                if (ft == typeof(Guid) || ft == typeof(string))
-                {
-                    JsonString += "\"" + val.ToString() + "\"";
-                }
-                else 
-                {
-                    if (ft == typeof(Hashtable))
-                    {
-                        JsonString += "{ ";
-                        Hashtable ht = (Hashtable)val;
-                        IEnumerator ie = ht.GetEnumerator();
-                        bool isNext = false;
-                        while (ie.MoveNext())
-                        {
-                            DictionaryEntry de = (DictionaryEntry) ie.Current;
-                            if (isNext)
-                            {
-                                JsonString += ", ";
-                            }
-                            else
-                            {
-                                isNext = true;
-                            }
-                            JsonString += "\"" + de.Key + "\": \"" + de.Value + "\"";
-                        }
 
-                        JsonString += " }";
+                if (ft == typeof(string))
+                {
+                    string s = (string)val;
+                    JsonString += "\"" + Escape(s) + "\"";
+                }
+                else
+                {
+                    if (ft == typeof(Guid))
+                    {
+                        JsonString += "\"" + val.ToString() + "\"";
                     }
                     else
                     {
-                        if (ft.IsEnum)
+                        if (ft == typeof(Hashtable))
                         {
-                            string ss = val.ToString();
-                            
-                            JsonString += "\"" + ss + "\"";
-                        }
-                        else
-                        {
-                            if (ft.IsArray)
+                            JsonString += "{ ";
+                            Hashtable ht = (Hashtable)val;
+                            IEnumerator ie = ht.GetEnumerator();
+                            bool isNext = false;
+                            while (ie.MoveNext())
                             {
-                                JsonString += "[";
-                                bool IsNext = false;
-
-                                Array arr = (Array)val;
-                                foreach (object ov in arr)
+                                DictionaryEntry de = (DictionaryEntry)ie.Current;
+                                if (isNext)
                                 {
-                                    if (IsNext)
-                                    {
-                                        JsonString += ", ";
-                                    }
-                                    else
-                                    {
-                                        IsNext = true;
-                                    }
-                                    JsonString += ToJson(ov);
-                                }
-                                JsonString += "]";
-                            }
-                            else
-                            {
-                                if (ft == typeof(int) || ft == typeof(float) || ft == typeof(double))
-                                {
-                                    JsonString += val.ToString();
+                                    JsonString += ", ";
                                 }
                                 else
                                 {
-                                    if (_objectHash.Contains(val.GetHashCode()))
+                                    isNext = true;
+                                }
+                                JsonString += "\"" + de.Key + "\": \"" + de.Value + "\"";
+                            }
+
+                            JsonString += " }";
+                        }
+                        else
+                        {
+                            if (ft.IsEnum)
+                            {
+                                string ss = val.ToString();
+
+                                JsonString += "\"" + ss + "\"";
+                            }
+                            else
+                            {
+                                if (ft.IsArray)
+                                {
+                                    JsonString += "[";
+                                    bool IsNext = false;
+
+                                    Array arr = (Array)val;
+                                    foreach (object ov in arr)
                                     {
-                                        throw new InvalidOperationException("Cyclic loop in object structure!");
+                                        if (IsNext)
+                                        {
+                                            JsonString += ", ";
+                                        }
+                                        else
+                                        {
+                                            IsNext = true;
+                                        }
+                                        JsonString += ToJson(ov);
                                     }
-                                    _objectHash.Add(val.GetHashCode());
-                                    JsonString += ToJson(val);
+                                    JsonString += "]";
+                                }
+                                else
+                                {
+                                    if (ft == typeof(int) || ft == typeof(float) || ft == typeof(double))
+                                    {
+                                        JsonString += val.ToString();
+                                    }
+                                    else
+                                    {
+                                        if (_objectHash.Contains(val.GetHashCode()))
+                                        {
+                                            throw new InvalidOperationException("Cyclic loop in object structure!");
+                                        }
+                                        _objectHash.Add(val.GetHashCode());
+                                        JsonString += ToJson(val);
+                                    }
                                 }
                             }
                         }
@@ -178,9 +187,152 @@ namespace Json.Serialization
 
             return sl;
         }
+        
+       
+        /// <summary>
+        /// Escapes the JSON string according to JSON spec
+        /// </summary>
+        /// <param name="s">String to escape</param>
+        /// <returns>Escaped string</returns>
+        private string Escape(string s)
+        {
+            string rv = s;
+            
+            for (int x = 0; x < _escapeSymbols.Length; x++)
+            {
+                rv = rv.Replace(_escapeSymbols[x], _escapeReplacement[x]);
+            }
+
+            return rv;
+        }
 
         /// <summary>
-        /// Returns nets parameter string
+        /// Unescapes JSON string according to JSON spec
+        /// </summary>
+        /// <param name="s">JSON string to unescape</param>
+        /// <returns>Unescaped string</returns>
+        private string Unescape(string s)
+        {
+            string rv = s;
+
+            for (int x = 0; x < _escapeSymbols.Length; x++)
+            {
+                rv = rv.Replace(_escapeReplacement[x], _escapeSymbols[x]);
+            }
+            
+            for (int nUni = rv.IndexOf("\\u"); nUni != -1; nUni = rv.IndexOf("\\u"))
+            {
+                if (nUni + 6 > rv.Length)
+                {
+                    throw new InvalidOperationException("Invalid unicode char in JSON string!");
+                }
+                string sCode = rv.Substring(nUni + 2, 4);
+                char ch = UnicodeToUtf(sCode);
+                rv = rv.Substring(0, nUni) + ch + rv.Substring(nUni + 6);
+            }
+
+            return rv;
+        }
+
+        /// <summary>
+        /// Parse HEX string into integer.
+        /// </summary>
+        /// <param name="s">4-digit hexadecimal number to parse</param>
+        /// <returns>Integer code</returns>
+        /// <remarks>
+        /// The input string is expected to carry numbers only, without "0x" prefix.
+        /// Correct: 00A9
+        /// Incorrect: 0x00A9
+        /// Incorrect: 00A9h
+        /// </remarks>
+        private int ParseHex(string s)
+        {
+            int rv = 0;
+            string ps = s.Trim().ToLower();
+            if (ps.Length == 0 || ps.Length > 4)
+            {
+                throw new InvalidOperationException("Invalid code - expected 4-dight HEX number!");
+            }
+            int pos = 1;
+            for (int x = ps.Length - 1; x >= 0; x--)
+            {
+                byte b = (byte)ps[x];
+                if (b >= '0' && b <= '9')
+                {
+                    b -= (byte)'0';
+                }
+                else
+                {
+                    if (b >= 'a' && b <= 'f')
+                    {
+                        b = (byte)(b - (byte)'a' + (byte)0x0A);
+                    }
+                    else
+                    {
+                        throw new InvalidOperationException("Unexpected symbol in source string! Only hexadecimal numbers are expected!");
+                    }
+
+                }
+
+                rv += pos * b;
+                pos *= 0x10;
+            }
+            return rv;
+        }
+
+        /// <summary>
+        /// Convert a Unicode character code to UTF-8 char
+        /// </summary>
+        /// <param name="code">4-dight hexadecimal code</param>
+        /// <returns>UTF-8 character</returns>
+        public char UnicodeToUtf(string code)
+        {
+            int nc = ParseHex(code);
+
+            //byte b1 = (byte)(nc >> 8);
+            //byte b2 = (byte)(nc & 0xFF);
+
+            byte[] utf = new byte[] {};
+            if (nc <= 0x7F)
+            {
+                utf = new byte[] { (byte)((byte)nc & 0x7F) };
+            }
+            else
+            {   
+                int nbytes = 0;
+                int tmp = nc;
+                while (tmp != 0)
+                {
+                    tmp = tmp >> 6;
+                    nbytes++;
+                }
+                utf = new byte[nbytes];
+                tmp = nc;
+
+                byte header = 0;
+                for (int x = nbytes - 1; x >= 0; x--)
+                {
+                    byte bt = (byte)(tmp & 0x3F);
+                    tmp = tmp >> 6;
+                    utf[x] = (byte)(bt | 0x80);
+                    header = (byte)((header >> 1) | 0x80);
+                }
+                utf[0] |= header;
+            }
+
+            char [] rvs = Encoding.UTF8.GetChars(utf);
+            if (rvs.Length == 1)
+            {
+                return rvs[0];
+            }
+            else
+            {
+                throw new InvalidOperationException("Invalid character code!");
+            }
+        }
+        
+        /// <summary>
+        /// Returns next parameter string
         /// </summary>
         /// <param name="s">String to be searched</param>
         /// <param name="pos">Start position</param>
@@ -188,27 +340,56 @@ namespace Json.Serialization
         private string GetNextQuotedString(string s, ref int pos)
         {
             string rv = string.Empty;
-            int ns = s.IndexOf('\"', pos);
+            int ns = GetEscapedIndex(s, '\"', pos); //s.IndexOf('\"', pos);
             if (ns != -1)
             {
-                int nb = s.IndexOf('}', pos);
-                if (nb == -1 || nb > ns)
+                //int nb = GetEscapedIndex(s, '}', pos); //s.IndexOf('}', pos);
+                //if (nb == -1 || nb > ns)
+                //{
+                int ne = GetEscapedIndex(s, '\"', ns + 1); //s.IndexOf('\"', ns + 1);
+                if (ne != -1)
                 {
-                    int ne = s.IndexOf('\"', ns + 1);
-                    if (ne != -1)
-                    {
-                        rv = s.Substring(ns + 1, ne - ns - 1);
-                        pos = ne + 1; // after ":
-                    }
+                    rv = s.Substring(ns + 1, ne - ns - 1);
+                    pos = ne + 1; // after ":
+                }
+                //}
+            }
+            return Unescape(rv);
+        }
+
+        /// <summary>
+        /// Returns the index of the next character with regards of the escaping
+        /// </summary>
+        /// <param name="s">Source string</param>
+        /// <param name="ch">Char to find</param>
+        /// <param name="pos">Start position for the search</param>
+        /// <returns>Zero-based index of the symbol or -1 if not found</returns>
+        private int GetEscapedIndex(string s, char ch, int pos)
+        {
+            for (int x = pos; x < s.Length; ++x)
+            {
+                if (s[x] == ch)
+                {
+                    if (x > 0 && s[x - 1] != '\\') return x; 
                 }
             }
-            return rv;
+            return -1;
         }
 
         /// <summary>
         /// JSON null string
         /// </summary>
         private const string NullString = "null";
+
+        /// <summary>
+        /// Symbols to be escaped in JSON
+        /// </summary>
+        private string[] _escapeSymbols = { "\\", "\"", "/", "\b", "\f", "\n", "\r", "\t" };
+
+        /// <summary>
+        /// Escape strings for forbidden symbols
+        /// </summary>
+        private string[] _escapeReplacement = { "\\\\", "\\\"", "\\/", "\\b", "\\f", "\\n", "\\r", "\\t" };
 
         /// <summary>
         /// Extracts a value from a given string
